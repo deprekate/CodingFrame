@@ -56,5 +56,5 @@ for id in contig_dict:
 	#ax.plot(list(contig_entropy.entropy_at()[3])[50:2000], label='frame 3')
 ax.legend(loc="upper left")
 fig.set_size_inches(50, 5)
-fig.savefig('test.png', dpi=300)
+fig.savefig('figure.png', dpi=300)
 plt.show()

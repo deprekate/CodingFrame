@@ -37,9 +37,9 @@ class Codon:
 
 
 class NucleotideEntropy:
-	def __init__(self, nucleotides, window = 120):
+	def __init__(self, nucleotides, window = 150):
 		self.window = window//3
-		self.frames = itertools.cycle([3, 1, 2])
+		self.frames = itertools.cycle([1, 2, 3])
 		self.frame = None
 
 		self.codon = deque(['-','-','-'])
@@ -55,7 +55,16 @@ class NucleotideEntropy:
 		self.frequency[3] = self._init_dict()
 
 		self.entropy = [deque([]),deque([]),deque([]),deque([])]
-	#	self.freq =[]
+
+		nucs = ['T', 'C', 'A', 'G']
+		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
+		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
+		self.translate = dict(zip(codons, amino_acids))
+
+		self.aa = [None] * 4
+		self.aa[1] = self._init_aadict()
+		self.aa[2] = self._init_aadict()
+		self.aa[3] = self._init_aadict()
 
 		for nucl in nucleotides:
 			# find nucleotide frequency
@@ -63,8 +72,10 @@ class NucleotideEntropy:
 			self.add_base(nucl)
 
 			# find shannon entropy
-			se = self.shannon_entropy(self.frequency[self.frame])
+			#se = self.shannon_entropy(self.frequency[self.frame])
+			se = self.shannon_entropy2(self.aa[self.frame])
 			self.entropy[self.frame].append(se)
+
 	def entropy_at(self):
 		return self.entropy
 
@@ -77,16 +88,38 @@ class NucleotideEntropy:
  		# add newest codon
 		self.codons[self.frame].append(tuple(self.codon))
 		self.frequency[self.frame][tuple(self.codon)] += 1
+		# misc
+		aa = self.translate.get("".join(self.codon), "-")
+		self.aa[self.frame][aa] += 1
 
  		# pop oldest codon
 		popped_codon = self.codons[self.frame].popleft()
 		self.frequency[self.frame][popped_codon] -= 1
+		# misc
+		aa = self.translate.get("".join(popped_codon), "-")
+		self.aa[self.frame][aa] -= 1
+
+	def translate(self):
+		nucs = ['T', 'C', 'A', 'G']
+		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
+		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
+		codon_table = dict(zip(codons, amino_acids))
 
 	def shannon_entropy(self, dictionary):
 		se = 0;
 		for key in dictionary:
 			if '-' not in key and dictionary[key]:
-				se = se + log(dictionary[key])
+				p = dictionary[key] / 64
+				se += -p * log(p)
+		return se
+
+
+	def shannon_entropy2(self, dictionary):
+		se = 0;
+		for key in dictionary:
+			if key != '-' and dictionary[key]:
+				p = dictionary[key] / self.window
+				se += -p * log(p)
 		return se
 
 	def _init_dict(self):
@@ -97,6 +130,12 @@ class NucleotideEntropy:
 					freq_dict[(tuple([first, second, third]))] = 0
 		return freq_dict
 				
+	def _init_aadict(self):
+		freq_dict = dict()
+		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG-'
+		for aa in amino_acids:
+			freq_dict[aa] = 0
+		return freq_dict
 
 	def _close(self):
 		for _ in range(self.window//2):

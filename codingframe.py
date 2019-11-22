@@ -3,7 +3,7 @@ from modules.file_handling import read_fasta
 
 from modules.nucleotide_entropy import NucleotideEntropy
 
-from math import copysign
+import matplotlib.pyplot as plt
 
 
 
@@ -16,8 +16,15 @@ args = get_args()
 contig_dict = read_fasta(args.infile)
 
 #------------------------------------stuff------------------------------------#
+fig, ax = plt.subplots()
+
 
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
-	for item in zip(contig_entropy.entropy_at()[1], contig_entropy.entropy_at()[2], contig_entropy.entropy_at()[3]):
-		print(item)
+	ax.plot(list(contig_entropy.entropy_at()[1])[50:2000], label='frame 1') 
+	ax.plot(list(contig_entropy.entropy_at()[2])[50:2000], label='frame 2') 
+	ax.plot(list(contig_entropy.entropy_at()[3])[50:2000], label='frame 3') 
+ax.legend(loc="upper left")
+fig.set_size_inches(20, 5)
+fig.savefig('test.png', dpi=300)
+plt.show()

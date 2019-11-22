@@ -77,6 +77,9 @@ class NucleotideEntropy:
 			self.entropy[self.frame].append(se)
 
 	def entropy_at(self):
+		for _ in range(self.window):
+			for frame in [1,2,3]:
+				self.entropy[frame].popleft()
 		return self.entropy
 
 	def add_base(self, base):

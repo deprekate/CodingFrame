@@ -55,16 +55,12 @@ class NucleotideEntropy:
 		self.frequency[3] = self._init_dict()
 
 		self.entropy = [deque([]),deque([]),deque([]),deque([])]
+		self.entropy_rev = [deque([]),deque([]),deque([]),deque([])]
 
 		nucs = ['T', 'C', 'A', 'G']
 		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
 		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
 		self.translate = dict(zip(codons, amino_acids))
-
-		self.aa = [None] * 4
-		self.aa[1] = self._init_aadict()
-		self.aa[2] = self._init_aadict()
-		self.aa[3] = self._init_aadict()
 
 		for nucl in nucleotides:
 			# find nucleotide frequency
@@ -72,11 +68,12 @@ class NucleotideEntropy:
 			self.add_base(nucl)
 
 			# find shannon entropy
-			#se = self.shannon_entropy(self.frequency[self.frame])
-			se = self.shannon_entropy2(self.aa[self.frame])
+			se = self.peptide_entropy(self.frequency[self.frame])
+			#se = self.dinucleotide_entropy(self.frequency[self.frame])
+			#se = self.trinucleotide_entropy(self.frequency[self.frame])
 			self.entropy[self.frame].append(se)
 
-	def entropy_at(self):
+	def get(self):
 		for _ in range(self.window):
 			for frame in [1,2,3]:
 				self.entropy[frame].popleft()
@@ -92,15 +89,15 @@ class NucleotideEntropy:
 		self.codons[self.frame].append(tuple(self.codon))
 		self.frequency[self.frame][tuple(self.codon)] += 1
 		# misc
-		aa = self.translate.get("".join(self.codon), "-")
-		self.aa[self.frame][aa] += 1
+		#aa = self.translate.get("".join(self.codon), "-")
+		#self.aa[self.frame][aa] += 1
 
  		# pop oldest codon
 		popped_codon = self.codons[self.frame].popleft()
 		self.frequency[self.frame][popped_codon] -= 1
 		# misc
-		aa = self.translate.get("".join(popped_codon), "-")
-		self.aa[self.frame][aa] -= 1
+		#aa = self.translate.get("".join(popped_codon), "-")
+		#self.aa[self.frame][aa] -= 1
 
 	def translate(self):
 		nucs = ['T', 'C', 'A', 'G']
@@ -108,20 +105,37 @@ class NucleotideEntropy:
 		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
 		codon_table = dict(zip(codons, amino_acids))
 
-	def shannon_entropy(self, dictionary):
+	def peptide_entropy(self, dictionary):
+		se = 0;
+		new_dict = dict()
+		for key in dictionary:
+			if '-' not in key and dictionary[key]:
+				aa = self.translate[''.join(key)]
+				count = new_dict.get(aa, 0)
+				new_dict[aa] = count + 1
+		for key in new_dict:
+			print(new_dict)
+			p = new_dict[key] / 21
+			se += -p * log(p)
+		return se
+
+	def dinucleotide_entropy(self, dictionary):
+		se = 0;
+		new_dict = dict()
+		for key in dictionary:
+			if '-' not in key and dictionary[key]:
+				count = new_dict.get(key[0:2] , 0)
+				new_dict[key[0:2]] = count + 1
+		for key in new_dict:
+			p = new_dict[key] / 16
+			se += -p * log(p)
+		return se
+
+	def trinucleotide_entropy(self, dictionary, direction = 'forward'):
 		se = 0;
 		for key in dictionary:
 			if '-' not in key and dictionary[key]:
 				p = dictionary[key] / 64
-				se += -p * log(p)
-		return se
-
-
-	def shannon_entropy2(self, dictionary):
-		se = 0;
-		for key in dictionary:
-			if key != '-' and dictionary[key]:
-				p = dictionary[key] / self.window
 				se += -p * log(p)
 		return se
 
@@ -139,27 +153,4 @@ class NucleotideEntropy:
 		for aa in amino_acids:
 			freq_dict[aa] = 0
 		return freq_dict
-
-	def _close(self):
-		for _ in range(self.window//2):
-			for frame in [1,2,3]:
-				self.total[frame].popleft()
-				item = self.bases[frame].popleft()
-				self.frequency[frame][item] -= 1
-				self.total[frame].append(self.frequency[frame]['G'] + self.frequency[frame]['C'])
-
-	def get(self):
-		self._close()
-		self.freq.append( [20,20,20] )
-		for i in range(len(self.total[3])-1):
-			self.freq.append( [self.total[1][i],self.total[2][i],self.total[3][i]] )
-			self.freq.append( [self.total[2][i],self.total[3][i],self.total[1][i+1]] )
-			self.freq.append( [self.total[3][i],self.total[1][i+1],self.total[2][i+1]] )
-		i += 1
-		self.freq.append( [self.total[1][i],self.total[2][i],self.total[3][i]] )
-		if(i < len(self.total[1])-1):
-			self.freq.append( [self.total[2][i],self.total[3][i],self.total[1][i+1]] )
-		if(i < len(self.total[2])-1):
-			self.freq.append( [self.total[3][i],self.total[1][i+1],self.total[2][i+1]] )
-		return self.freq
 

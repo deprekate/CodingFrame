@@ -59,25 +59,43 @@ class NucleotideEntropy:
 
 		nucs = ['T', 'C', 'A', 'G']
 		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
-		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
-		self.translate = dict(zip(codons, amino_acids))
+		self.amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
+		self.translate = dict(zip(codons, self.amino_acids))
 
-		for nucl in nucleotides:
+		self.complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', '-': '-'}
+
+		for i, nucl in enumerate(nucleotides):
 			# find nucleotide frequency
 			self.frame = next(self.frames)
 			self.add_base(nucl)
 
 			# find shannon entropy
-			se = self.peptide_entropy(self.frequency[self.frame])
-			#se = self.dinucleotide_entropy(self.frequency[self.frame])
 			#se = self.trinucleotide_entropy(self.frequency[self.frame])
+			#se = self.dinucleotide_entropy(self.frequency[self.frame])
+			print(i, nucl, self.codon)	
+			se = self.peptide_entropy(self.frequency[self.frame])
 			self.entropy[self.frame].append(se)
 
+			#se = self.dinucleotide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
+			se = self.peptide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
+			self.entropy_rev[self.frame].append(se)
+			
+
 	def get(self):
-		for _ in range(self.window):
+		for _ in range(self.window//2):
 			for frame in [1,2,3]:
 				self.entropy[frame].popleft()
-		return self.entropy
+		for _ in range(self.window//2):
+			for frame in [1,2,3]:
+				self.entropy_rev[frame].popleft()
+		return self.entropy, self.entropy_rev
+
+	def reverse_frequencies(self, dictionary):
+		new_dict = dict()
+		for key in dictionary:
+			new_key = tuple([self.complement[t] for t in key[::-1]])
+			new_dict[new_key] = dictionary[key]
+		return new_dict
 
 	def add_base(self, base):
 
@@ -99,24 +117,24 @@ class NucleotideEntropy:
 		#aa = self.translate.get("".join(popped_codon), "-")
 		#self.aa[self.frame][aa] -= 1
 
-	def translate(self):
-		nucs = ['T', 'C', 'A', 'G']
-		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
-		amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
-		codon_table = dict(zip(codons, amino_acids))
-
 	def peptide_entropy(self, dictionary):
 		se = 0;
 		new_dict = dict()
+		total = 0
 		for key in dictionary:
 			if '-' not in key and dictionary[key]:
 				aa = self.translate[''.join(key)]
 				count = new_dict.get(aa, 0)
-				new_dict[aa] = count + 1
+				new_dict[aa] = dictionary[key] + count 
+				#total += dictionary[key] + count
 		for key in new_dict:
-			print(new_dict)
-			p = new_dict[key] / 21
+			new_dict[key] = new_dict[key] / self.amino_acids.count(key)
+			total += new_dict[key]
+		for key in new_dict:
+			p = new_dict[key] / total
 			se += -p * log(p)
+		print(se)
+		print(new_dict)
 		return se
 
 	def dinucleotide_entropy(self, dictionary):

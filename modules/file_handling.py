@@ -44,4 +44,33 @@ def read_fasta(filepath):
 	if '' in my_contigs: del my_contigs['']
 	return my_contigs
 
+def read_gff(filepath):
+	my_frames = dict()	
+	with gzip.open(filepath , 'rt') as f:
+		for line in f:
+			if not line.startswith(('#','\n')):
+				column = line.split()
+				# forward direction
+				if column[6] == '+':
+					beg = int(column[3])
+					end = int(column[4])
+					frame = ((beg - 1) % 3 ) + 1
+					for i in range(beg, end):
+						my_frames[i] = frame
+				# reverse
+				elif column[6] == '-':
+					beg = int(column[3])
+					end = int(column[4])
+					frame = ((beg - 1) % 3 ) + 1
+					print(beg, end, frame)
+					for i in range(beg, end):
+						my_frames[i] = frame
+				# unknown
+				else:
+					raise ValueError("A gene was found that is neither forward or reverse")
+	return my_frames
+			
+
+
+
 

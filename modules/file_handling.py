@@ -62,7 +62,6 @@ def read_gff(filepath):
 					beg = int(column[3])
 					end = int(column[4])
 					frame = ((beg - 1) % 3 ) + 1
-					print(beg, end, frame)
 					for i in range(beg, end):
 						my_frames[i] = frame
 				# unknown

@@ -8,7 +8,7 @@ import itertools
 from modules.codon_probability import CodonProbability
 
 
-class NucleotideEntropy:
+class NucleotideEntropy(list):
 	def __init__(self, nucleotides, window = 150):
 		self.window = window//3
 		self.frames = itertools.cycle([1, 2, 3])
@@ -26,8 +26,14 @@ class NucleotideEntropy:
 		self.frequency[2] = self._init_dict()
 		self.frequency[3] = self._init_dict()
 
-		self.entropy = [deque([]),deque([]),deque([]),deque([])]
-		self.entropy_rev = [deque([]),deque([]),deque([]),deque([])]
+		self.entropy = {
+				1 : deque([]),
+				2 : deque([]),
+				3 : deque([]),
+			       -1 : deque([]),
+			       -2 : deque([]),
+			       -3 : deque([])
+				}
 
 		nucs = ['T', 'C', 'A', 'G']
 		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
@@ -35,14 +41,14 @@ class NucleotideEntropy:
 		self.translate = dict(zip(codons, self.amino_acids))
 
 		self.complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', '-': '-'}
-
 		
 		self.codon_probs = CodonProbability(nucleotides)
 
-		for i, nucl in enumerate(nucleotides):
+		for i, nucl in enumerate(nucleotides,1):
 			# find nucleotide frequency
 			self.frame = next(self.frames)
 			self.add_base(nucl)
+			position = (i-1)//3
 
 			# find shannon entropy
 			#se = self.trinucleotide_entropy(self.frequency[self.frame])
@@ -50,20 +56,35 @@ class NucleotideEntropy:
 			#print(i, nucl, self.codon)	
 			se = self.peptide_entropy(self.frequency[self.frame])
 			self.entropy[self.frame].append(se)
+			try:
+				self[position].append(se)
+			except:
+				self.append([])
+				self[position].append(se)
+				
+			
+			#self[self.frame].append(se)
 
 			#se = self.dinucleotide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
 			se = self.peptide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
-			self.entropy_rev[self.frame].append(se)
+			self.entropy[-self.frame].append(se)
+			try:
+				self[position].append(se)
+			except:
+				self.append(list)
+				self[position].append(se)
+			#self[-self.frame].append(se)
+		self.unset()
 			
 
-	def get(self):
+	def unset(self):
 		for _ in range(self.window//2):
-			for frame in [1,2,3]:
+			for frame in [1,2,3,-1,-2,-3]:
 				self.entropy[frame].popleft()
-		for _ in range(self.window//2):
-			for frame in [1,2,3]:
-				self.entropy_rev[frame].popleft()
-		return self.entropy, self.entropy_rev
+				#self[frame].popleft()
+
+	def get(self):
+		return self.entropy
 
 	def reverse_frequencies(self, dictionary):
 		new_dict = dict()

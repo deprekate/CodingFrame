@@ -1,5 +1,6 @@
 from modules.file_handling import get_args
 from modules.file_handling import read_fasta
+from modules.file_handling import read_gff
 
 from modules.nucleotide_entropy import NucleotideEntropy
 
@@ -7,25 +8,30 @@ import matplotlib.pyplot as plt
 
 from itertools import tee
 
+def min_dir(a, b):
+	pass
 
-def pairwise(it):
-    it = iter(it)
-    while True:
-        try:
-            yield next(it), next(it)
-        except StopIteration:
-            return
+def min_idx(a, b, c):
+	if(a > b):
+		if(b > c):
+			return 3;
+		else:
+			return 2;
+	else:
+		if(a > c):
+			return 3;
+		else:
+			return 1;
 
-def downsample(old_list, fold: int):
-	new_list = []
-	for a, b in pairwise(old_list):	
-		new_list.append((a + b) / 2)
-		new_list.append((a + b) / 2)
-	fold -= 1
-	fold = 1
-	if fold > 1:
-		new_list = downsample(new_list, fold)
-	return new_list
+def minimum_frame(l):
+	lowest = float("inf")
+	frame = None
+	for i, f in enumerate([1, -1, 2, -2, 3, -3]):
+		if l[i] < lowest:
+			lowest = l[i]
+			frame = f
+	return frame
+		
 
 #----------------------------command line arguements--------------------------#
 
@@ -35,7 +41,30 @@ args = get_args()
 
 contig_dict = read_fasta(args.infile)
 
-#------------------------------------stuff------------------------------------#
+actual_frame = read_gff(args.infile.replace('fna', 'gff'))
+
+#------------------------------------finding error------------------------------------#
+
+for id in contig_dict:
+	contig_entropy = NucleotideEntropy(contig_dict[id])
+	correct = 0
+	wrong = 0
+	for i, base in enumerate(contig_dict[id], 1):
+		position = (i-1)//3
+		try:
+			#print(i, base, actual_frame.get(i, "NC"), minimum_frame(contig_entropy[position]), contig_entropy[position])
+			if actual_frame.get(i, "NC") ==  minimum_frame(contig_entropy[position]):
+				correct += 1
+			else:
+				wrong += 1
+		except:
+			pass #print("0")
+	print(correct / (correct + wrong))
+
+exit()
+
+
+#------------------------------------plotting------------------------------------#
 fig, ax = plt.subplots()
 
 

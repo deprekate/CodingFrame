@@ -5,35 +5,7 @@ from math import log
 import sys
 import itertools
 
-class Base:
-    def __init__(self, nucl):
-       self.nucl = nucl
-       self.next = None
- 
-class Codon:
-    def __init__(self):
-        self.head = None
-        self.tail = None
- 
-    def push(self,  nucl):
-        if self.head is None:
-            self.head = Base(nucl)
-        else:
-            new_nucl = Base(nucl)
-            new_nucl.next = self.head
-            self.head = new_nucl
-
-    def pull(self):
-        pass
- 
-    def pop(self):
-        if self.head is None:
-            return None
-        else:
-            popped = self.head.nucl
-            self.head = self.head.next
-            return popped
-
+from modules.codon_probability import CodonProbability
 
 
 class NucleotideEntropy:
@@ -64,6 +36,9 @@ class NucleotideEntropy:
 
 		self.complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', '-': '-'}
 
+		
+		self.codon_probs = CodonProbability(nucleotides)
+
 		for i, nucl in enumerate(nucleotides):
 			# find nucleotide frequency
 			self.frame = next(self.frames)
@@ -72,7 +47,7 @@ class NucleotideEntropy:
 			# find shannon entropy
 			#se = self.trinucleotide_entropy(self.frequency[self.frame])
 			#se = self.dinucleotide_entropy(self.frequency[self.frame])
-			print(i, nucl, self.codon)	
+			#print(i, nucl, self.codon)	
 			se = self.peptide_entropy(self.frequency[self.frame])
 			self.entropy[self.frame].append(se)
 
@@ -119,11 +94,13 @@ class NucleotideEntropy:
 
 	def peptide_entropy(self, dictionary):
 		se = 0;
+		#se0 = 0;
 		new_dict = dict()
 		total = 0
 		for key in dictionary:
 			if '-' not in key and dictionary[key]:
 				aa = self.translate[''.join(key)]
+				#se0 += -self.codon_probs.probability(aa) * log(self.codon_probs.probability(aa))
 				count = new_dict.get(aa, 0)
 				new_dict[aa] = dictionary[key] + count 
 				#total += dictionary[key] + count
@@ -131,10 +108,8 @@ class NucleotideEntropy:
 			new_dict[key] = new_dict[key] / self.amino_acids.count(key)
 			total += new_dict[key]
 		for key in new_dict:
-			p = new_dict[key] / total
+			p = new_dict[key] / 22 #total
 			se += -p * log(p)
-		print(se)
-		print(new_dict)
 		return se
 
 	def dinucleotide_entropy(self, dictionary):

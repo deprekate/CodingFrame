@@ -8,7 +8,7 @@ import itertools
 from modules.codon_probability import CodonProbability
 
 
-class NucleotideEntropy(list):
+class NucleotideEntropy(dict):
 	def __init__(self, nucleotides, window = 150):
 		self.window = window//3
 		self.frames = itertools.cycle([1, 2, 3])
@@ -26,14 +26,12 @@ class NucleotideEntropy(list):
 		self.frequency[2] = self._init_dict()
 		self.frequency[3] = self._init_dict()
 
-		self.entropy = {
-				1 : deque([]),
-				2 : deque([]),
-				3 : deque([]),
-			       -1 : deque([]),
-			       -2 : deque([]),
-			       -3 : deque([])
-				}
+		self[1] = deque([])
+		self[2] = deque([])
+		self[3] = deque([])
+		self[-1] = deque([])
+		self[-2] = deque([])
+		self[-3] = deque([])
 
 		nucs = ['T', 'C', 'A', 'G']
 		codons = [a+b+c for a in nucs for b in nucs for c in nucs]
@@ -55,24 +53,24 @@ class NucleotideEntropy(list):
 			#se = self.dinucleotide_entropy(self.frequency[self.frame])
 			#print(i, nucl, self.codon)	
 			se = self.peptide_entropy(self.frequency[self.frame])
-			self.entropy[self.frame].append(se)
-			try:
-				self[position].append(se)
-			except:
-				self.append([])
-				self[position].append(se)
+			self[self.frame].append(se)
+			#try:
+			#	self[position].append(se)
+			#except:
+			#	self.append([])
+			#	self[position].append(se)
 				
 			
 			#self[self.frame].append(se)
 
 			#se = self.dinucleotide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
 			se = self.peptide_entropy(self.reverse_frequencies(self.frequency[self.frame]))
-			self.entropy[-self.frame].append(se)
-			try:
-				self[position].append(se)
-			except:
-				self.append(list)
-				self[position].append(se)
+			self[-self.frame].append(se)
+			#try:
+			#	self[position].append(se)
+			#except:
+			#	self.append(list)
+			#	self[position].append(se)
 			#self[-self.frame].append(se)
 		self.unset()
 			
@@ -80,8 +78,8 @@ class NucleotideEntropy(list):
 	def unset(self):
 		for _ in range(self.window//2):
 			for frame in [1,2,3,-1,-2,-3]:
-				self.entropy[frame].popleft()
-				#self[frame].popleft()
+				self[frame].popleft()
+				#self.pop(0)
 
 	def get(self):
 		return self.entropy
@@ -115,21 +113,18 @@ class NucleotideEntropy(list):
 
 	def peptide_entropy(self, dictionary):
 		se = 0;
-		#se0 = 0;
 		new_dict = dict()
 		total = 0
 		for key in dictionary:
 			if '-' not in key and dictionary[key]:
 				aa = self.translate[''.join(key)]
-				#se0 += -self.codon_probs.probability(aa) * log(self.codon_probs.probability(aa))
 				count = new_dict.get(aa, 0)
 				new_dict[aa] = dictionary[key] + count 
-				#total += dictionary[key] + count
 		for key in new_dict:
-			new_dict[key] = new_dict[key] / self.amino_acids.count(key)
+			new_dict[key] = new_dict[key] * self.codon_probs.probability(aa) 
 			total += new_dict[key]
 		for key in new_dict:
-			p = new_dict[key] / 22 #total
+			p = new_dict[key] / total
 			se += -p * log(p)
 		return se
 

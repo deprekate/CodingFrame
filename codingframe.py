@@ -47,13 +47,15 @@ actual_frame = read_gff(args.infile.replace('fna', 'gff'))
 
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
+	print(contig_entropy)
+	exit()
 	correct = 0
 	wrong = 0
 	for i, base in enumerate(contig_dict[id], 1):
 		position = (i-1)//3
 		try:
 			#print(i, base, actual_frame.get(i, "NC"), minimum_frame(contig_entropy[position]), contig_entropy[position])
-			if actual_frame.get(i, "NC") ==  minimum_frame(contig_entropy[position]):
+			if actual_frame[i] ==  minimum_frame(contig_entropy[position]):
 				correct += 1
 			else:
 				wrong += 1

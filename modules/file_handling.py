@@ -53,17 +53,21 @@ def read_gff(filepath):
 				# forward direction
 				if column[6] == '+':
 					beg = int(column[3])
-					end = int(column[4])
+					end = int(column[4]) - 2
 					frame = ((beg - 1) % 3 ) + 1
-					for i in range(beg, end):
-						my_frames[i] = frame
+					other = ((end - 1) % 3 ) + 1
+					if frame == other:
+						for i in range(beg, end):
+							my_frames[i] = frame
 				# reverse
 				elif column[6] == '-':
 					beg = int(column[3])
-					end = int(column[4])
-					frame = ((beg - 1) % 3 ) + 1
-					for i in range(beg, end):
-						my_frames[i] = -frame
+					end = int(column[4]) - 2
+					frame = ((beg - 3) % 3 ) + 1
+					other = ((end - 3) % 3 ) + 1
+					if frame == other:
+						for i in range(beg, end):
+							my_frames[i] = -frame
 				# unknown
 				else:
 					raise ValueError("A gene was found that is neither forward or reverse")

@@ -121,10 +121,10 @@ class NucleotideEntropy(dict):
 				count = new_dict.get(aa, 0)
 				new_dict[aa] = dictionary[key] + count 
 		for key in new_dict:
-			new_dict[key] = new_dict[key] * self.codon_probs.probability(aa) 
+			new_dict[key] = new_dict[key] / self.amino_acids.count(key)
 			total += new_dict[key]
 		for key in new_dict:
-			p = new_dict[key] / total
+			p = new_dict[key] / 50
 			se += -p * log(p)
 		return se
 

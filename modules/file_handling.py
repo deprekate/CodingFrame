@@ -63,7 +63,7 @@ def read_gff(filepath):
 					end = int(column[4])
 					frame = ((beg - 1) % 3 ) + 1
 					for i in range(beg, end):
-						my_frames[i] = frame
+						my_frames[i] = -frame
 				# unknown
 				else:
 					raise ValueError("A gene was found that is neither forward or reverse")

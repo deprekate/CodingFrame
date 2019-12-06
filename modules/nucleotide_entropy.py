@@ -6,8 +6,8 @@ import sys
 import itertools
 import copy
 
+from modules.codon import Codon
 from modules.codon_probability import CodonProbability
-
 
 class NucleotideEntropy(dict):
 	def __init__(self, nucleotides,  window = 150):

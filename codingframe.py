@@ -89,7 +89,7 @@ for id in contig_dict:
 	dna = contig_dict[id].upper()
 	atskew = (dna.count('A') + dna.count('T')) / len(dna)
 	forward_skew = (list(actual_frame.values()).count(1) + list(actual_frame.values()).count(2) + list(actual_frame.values()).count(3)) / len(actual_frame.values())
-	print(atskew, forward_skew, correct / (correct + wrong))
+	print("AT_SKEW:", atskew, "PERCENT_CORRECT:", correct / (correct + wrong))
 	#exit()
 #------------------------------------plotting------------------------------------#
 	#continue
@@ -99,7 +99,7 @@ for id in contig_dict:
 	#ax.plot(ave, label='forward average')
 	for frame in [1,2,3,-1,-2,-3]:
 		ax[0].plot(contig_entropy[frame], label='frame ' + str(frame))
-	#ax[0].set_xlim(0, 1000)
+	ax[0].set_xlim(0, 3000)
 	a = ax[0].get_xticks().tolist()
 	a = [x * 3 for x in a]
 	ax[0].set_xticklabels(a)
@@ -109,7 +109,7 @@ for id in contig_dict:
 
 	ax[1].scatter(list(actual_frame.keys()), list(actual_frame.values()))
 	ax[1].set_yticks([1,2,3,-1,-2,-3])
-	#ax[1].set_xlim(0, 3000)
+	ax[1].set_xlim(0, 9000)
 	#ax[1].title.set_text('Actual Coding Frame')
 	ax[1].set_ylabel('Coding Frame')
 	ax[1].set_xlabel('Position Along Genome')

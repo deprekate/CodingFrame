@@ -63,8 +63,8 @@ def read_gff(filepath):
 				elif column[6] == '-':
 					beg = int(column[3])
 					end = int(column[4]) - 2
-					frame = ((beg - 3) % 3 ) + 1
-					other = ((end - 3) % 3 ) + 1
+					frame = ((beg - 1) % 3 ) + 1
+					other = ((end - 1) % 3 ) + 1
 					if frame == other:
 						for i in range(beg, end):
 							my_frames[i] = -frame

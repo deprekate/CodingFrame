@@ -44,28 +44,55 @@ contig_dict = read_fasta(args.infile)
 actual_frame = read_gff(args.infile.replace('fna', 'gff'))
 
 
-
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
 #------------------------------------finding error------------------------------------#
 	correct = 0
 	wrong = 0
-	for i, base in enumerate(contig_dict[id], 1):
+	for i, base in enumerate(contig_dict[id][:-2], 1):
 		position = (i-1)//3
+		frame = ((i - 1) % 3 ) + 1
+		#print(i, base, actual_frame.get(i, "NC"), minimum_frame(position, contig_entropy))
+		#print(position, '+'+str(frame), sep='\t', end='\t')
+		#aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
+		#for aa in 'ARNDBCEQZGHILKMFPSTWYV':
+		#	print(aminoacid_dictionary.get(aa, 0), end='\t')
 		try:
-			#print(i, base, actual_frame.get(i, "NC"), minimum_frame(position, contig_entropy))
 			if actual_frame[i] ==  minimum_frame(position, contig_entropy):
 				correct += 1
 			else:
 				wrong += 1
+		#	if frame == actual_frame[i]:
+		#		print('coding', end='')
+		#	else:
+		#		print('noncoding', end='')
+				
 		except:
+		#	print('intergenic', end='')
 			pass #print(i, position, "bad")
+		#print()
+		#reverse
+		#print(position, '-'+str(frame), sep='\t', end='\t')
+		#aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy.reverse_frequencies(contig_entropy[0][i]))
+		#for aa in 'ARNDBCEQZGHILKMFPSTWYV':
+		#	print(aminoacid_dictionary.get(aa, 0), end='\t')
+		#try:
+		#	if -frame == actual_frame[i]:
+		#		print('coding', end='')
+		#	else:
+		#		print('noncoding', end='')
+				
+		#except:
+		#	print('intergenic', end='')
+			#pass #print(i, position, "bad")
+		#print()
 	dna = contig_dict[id].upper()
 	atskew = (dna.count('A') + dna.count('T')) / len(dna)
 	forward_skew = (list(actual_frame.values()).count(1) + list(actual_frame.values()).count(2) + list(actual_frame.values()).count(3)) / len(actual_frame.values())
 	print(atskew, forward_skew, correct / (correct + wrong))
+	#exit()
 #------------------------------------plotting------------------------------------#
-	continue
+	#continue
 	fig, ax = plt.subplots(2)
 	#forward
 	#ave = [sum(a)/3 for a in zip(data[1], data[2], data[3])] 
@@ -89,6 +116,6 @@ for id in contig_dict:
 
 	#plt.xlim([0, 1000])
 	
-#fig.set_size_inches(20, 5)
-#fig.savefig('figure.png', dpi=300)
+fig.set_size_inches(20, 5)
+fig.savefig('figure.png', dpi=300)
 plt.show()

@@ -4,12 +4,13 @@ from decimal import Decimal
 from math import log
 import sys
 import itertools
+import copy
 
 from modules.codon_probability import CodonProbability
 
 
 class NucleotideEntropy(dict):
-	def __init__(self, nucleotides, window = 150):
+	def __init__(self, nucleotides,  window = 150):
 		self.window = window//3
 		self.frames = itertools.cycle([1, 2, 3])
 		self.frame = None
@@ -25,7 +26,8 @@ class NucleotideEntropy(dict):
 		self.frequency[1] = self._init_dict()
 		self.frequency[2] = self._init_dict()
 		self.frequency[3] = self._init_dict()
-
+		
+		self[0] = deque([])
 		self[1] = deque([])
 		self[2] = deque([])
 		self[3] = deque([])
@@ -72,17 +74,26 @@ class NucleotideEntropy(dict):
 			#	self.append(list)
 			#	self[position].append(se)
 			#self[-self.frame].append(se)
-		self.unset()
+			self[0].append(self.frequency[self.frame].copy())
+		self.end()
 			
 
-	def unset(self):
+	def end(self):
+		#remove half of first
 		for _ in range(self.window//2):
-			for frame in [1,2,3,-1,-2,-3]:
+			for frame in [1,2,3]:
 				self[frame].popleft()
-				#self.pop(0)
-
-	def get(self):
-		return self.entropy
+				self[-frame].popleft()
+			self[0].popleft()
+		#add half of last
+		for _ in range(self.window//2):
+			for frame in [1,2,3]:
+ 				# pop oldest codon
+				popped_codon = self.codons[frame].popleft()
+				self.frequency[frame][popped_codon] -= 1
+				se = self.peptide_entropy(self.frequency[frame])
+				self[frame].append(se)
+			self[0].append(self.frequency[frame].copy())
 
 	def reverse_frequencies(self, dictionary):
 		new_dict = dict()
@@ -90,6 +101,15 @@ class NucleotideEntropy(dict):
 			new_key = tuple([self.complement[t] for t in key[::-1]])
 			new_dict[new_key] = dictionary[key]
 		return new_dict
+
+	def translate_dict(self, dictionary):
+		aminoacid_dictionary = dict()
+		for codon in dictionary:
+			if '-' not in codon and dictionary[codon]:
+				aa = self.translate[''.join(codon)]
+				count = aminoacid_dictionary.get(aa, 0)
+				aminoacid_dictionary[aa] = dictionary[codon] + count 
+		return aminoacid_dictionary
 
 	def add_base(self, base):
 

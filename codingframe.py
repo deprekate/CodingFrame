@@ -49,27 +49,32 @@ for id in contig_dict:
 #------------------------------------finding error------------------------------------#
 	correct = 0
 	wrong = 0
+	for aa in 'n--ARNDBCEQZGHILKMFPSTWYV':
+		print(aa, end='\t')
+	print()
 	for i, base in enumerate(contig_dict[id][:-2], 1):
 		position = (i-1)//3
 		frame = ((i - 1) % 3 ) + 1
+		print(i, base, actual_frame.get(i, "NC"), sep='\t', end='\t')
+		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
+		for aa in 'ARNDBCEQZGHILKMFPSTWYV':
+			print(aminoacid_dictionary.get(aa, 0), end='\t')
+		print()
 		#print(i, base, actual_frame.get(i, "NC"), minimum_frame(position, contig_entropy))
 		#print(position, '+'+str(frame), sep='\t', end='\t')
-		#aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
-		#for aa in 'ARNDBCEQZGHILKMFPSTWYV':
-		#	print(aminoacid_dictionary.get(aa, 0), end='\t')
-		try:
-			if actual_frame[i] ==  minimum_frame(position, contig_entropy):
-				correct += 1
-			else:
-				wrong += 1
+		#try:
+		#	if actual_frame[i] ==  minimum_frame(position, contig_entropy):
+		#		correct += 1
+		#	else:
+		#		wrong += 1
 		#	if frame == actual_frame[i]:
 		#		print('coding', end='')
 		#	else:
 		#		print('noncoding', end='')
 				
-		except:
+		#except:
 		#	print('intergenic', end='')
-			pass #print(i, position, "bad")
+		#	pass #print(i, position, "bad")
 		#print()
 		#reverse
 		#print(position, '-'+str(frame), sep='\t', end='\t')
@@ -86,6 +91,7 @@ for id in contig_dict:
 		#	print('intergenic', end='')
 			#pass #print(i, position, "bad")
 		#print()
+	exit()
 	dna = contig_dict[id].upper()
 	atskew = (dna.count('A') + dna.count('T')) / len(dna)
 	forward_skew = (list(actual_frame.values()).count(1) + list(actual_frame.values()).count(2) + list(actual_frame.values()).count(3)) / len(actual_frame.values())
@@ -116,6 +122,6 @@ for id in contig_dict:
 
 	#plt.xlim([0, 1000])
 	
-fig.set_size_inches(20, 5)
-fig.savefig('figure.png', dpi=300)
-plt.show()
+#fig.set_size_inches(20, 5)
+#fig.savefig('figure.png', dpi=300)
+#plt.show()

@@ -10,7 +10,7 @@ from modules.codon import Codon
 from modules.codon_probability import CodonProbability
 
 class NucleotideEntropy(dict):
-	def __init__(self, nucleotides,  window = 150):
+	def __init__(self, nucleotides,  window = 120):
 		self.window = window//3
 		self.frames = itertools.cycle([1, 2, 3])
 		self.frame = None
@@ -48,7 +48,9 @@ class NucleotideEntropy(dict):
 			# find nucleotide frequency
 			self.frame = next(self.frames)
 			self.add_base(nucl)
-			position = (i-1)//3
+			position = (i-1) // 3
+
+			self[0].append(self.frequency[self.frame].copy())
 
 			# find shannon entropy
 			#se = self.trinucleotide_entropy(self.frequency[self.frame])
@@ -74,17 +76,17 @@ class NucleotideEntropy(dict):
 			#	self.append(list)
 			#	self[position].append(se)
 			#self[-self.frame].append(se)
-			self[0].append(self.frequency[self.frame].copy())
 		self.end()
 			
 
 	def end(self):
 		#remove half of first
+		self[0].popleft()
 		for _ in range(self.window//2):
 			for frame in [1,2,3]:
 				self[frame].popleft()
 				self[-frame].popleft()
-			self[0].popleft()
+				self[0].popleft()
 		#add half of last
 		for _ in range(self.window//2):
 			for frame in [1,2,3]:

@@ -27,7 +27,7 @@ class NucleotideEntropy(dict):
 		self.frequency[2] = self._init_dict()
 		self.frequency[3] = self._init_dict()
 		
-		self[0] = deque([])
+		self[0] = deque([''])
 		self[1] = deque([])
 		self[2] = deque([])
 		self[3] = deque([])
@@ -43,12 +43,11 @@ class NucleotideEntropy(dict):
 		self.complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', '-': '-'}
 		
 		self.codon_probs = CodonProbability(nucleotides)
-
-		for i, nucl in enumerate(nucleotides,1):
+		for i, nucl in enumerate(nucleotides):
 			# find nucleotide frequency
 			self.frame = next(self.frames)
 			self.add_base(nucl)
-			position = (i-1) // 3
+			#position = i // 3
 
 			self[0].append(self.frequency[self.frame].copy())
 
@@ -81,7 +80,8 @@ class NucleotideEntropy(dict):
 
 	def end(self):
 		#remove half of first
-		self[0].popleft()
+		#print(len(self[1]), len(self[2]), len(self[3]), len(self[-1]), len(self[-2]), len(self[-3]))
+		#print(len(self[1]))
 		for _ in range(self.window//2):
 			for frame in [1,2,3]:
 				self[frame].popleft()
@@ -95,7 +95,9 @@ class NucleotideEntropy(dict):
 				self.frequency[frame][popped_codon] -= 1
 				se = self.peptide_entropy(self.frequency[frame])
 				self[frame].append(se)
-			self[0].append(self.frequency[frame].copy())
+				se = self.peptide_entropy(self.reverse_frequencies(self.frequency[frame]))
+				self[-frame].append(se)
+				self[0].append(self.frequency[frame].copy())
 
 	def reverse_frequencies(self, dictionary):
 		new_dict = dict()
@@ -119,6 +121,10 @@ class NucleotideEntropy(dict):
 		self.codon.popleft()
 		self.codon.append(base)
 
+ 		# pop oldest codon
+		popped_codon = self.codons[self.frame].popleft()
+		self.frequency[self.frame][popped_codon] -= 1
+
  		# add newest codon
 		self.codons[self.frame].append(tuple(self.codon))
 		self.frequency[self.frame][tuple(self.codon)] += 1
@@ -126,9 +132,6 @@ class NucleotideEntropy(dict):
 		#aa = self.translate.get("".join(self.codon), "-")
 		#self.aa[self.frame][aa] += 1
 
- 		# pop oldest codon
-		popped_codon = self.codons[self.frame].popleft()
-		self.frequency[self.frame][popped_codon] -= 1
 		# misc
 		#aa = self.translate.get("".join(popped_codon), "-")
 		#self.aa[self.frame][aa] -= 1

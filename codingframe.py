@@ -1,3 +1,5 @@
+import os
+
 from modules.file_handling import get_args
 from modules.file_handling import read_fasta
 from modules.file_handling import read_gff
@@ -6,7 +8,6 @@ from modules.nucleotide_entropy import NucleotideEntropy
 
 import matplotlib.pyplot as plt
 
-from itertools import tee
 
 def min_dir(a, b):
 	pass
@@ -38,7 +39,6 @@ def minimum_frame(position, contig_entropy):
 args = get_args()
 
 #----------------------------------file input---------------------------------#
-
 contig_dict = read_fasta(args.infile)
 
 actual_frame = read_gff(args.infile.replace('fna', 'gff'))
@@ -49,14 +49,39 @@ for id in contig_dict:
 #------------------------------------finding error------------------------------------#
 	correct = 0
 	wrong = 0
-	for aa in 'n--ARNDBCEQZGHILKMFPSTWYV':
+	print('ID', 'POSITION' , 'BASE' , 'AT_SKEW', 'CODING_FRAME', 'FRAME', 'TYPE', sep='\t', end='\t')
+	for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 		print(aa, end='\t')
 	print()
-	for i, base in enumerate(contig_dict[id][:-2], 1):
-		position = (i-1)//3
-		frame = ((i - 1) % 3 ) + 1
-		print(i, base, actual_frame.get(i, "NC"), sep='\t', end='\t')
+	for i, base in enumerate(contig_dict[id][:-2]):
+		dna = contig_dict[id].upper()
+		atskew = round((dna.count('A') + dna.count('T')) / len(dna), 2)
+		#position = (i-1)//3
+		frame = (i % 3 ) + 1
+		print(os.path.basename(args.infile), i+1, base, atskew, actual_frame.get(i+1, "NC"), sep='\t', end='\t')
+		print(frame, sep='\t', end='\t')
+		try:
+			if frame == actual_frame[i+1]:
+				print('coding   ', end='\t')
+			else:
+				print('noncoding', end='\t')
+		except:
+			print('intergenic', end='\t')
 		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
+		for aa in 'ARNDBCEQZGHILKMFPSTWYV':
+			print(aminoacid_dictionary.get(aa, 0), end='\t')
+		print()
+		frame = -frame
+		print(os.path.basename(args.infile), i+1, base, atskew, actual_frame.get(i+1, "NC"), sep='\t', end='\t')
+		print(frame, sep='\t', end='\t')
+		try:
+			if frame == actual_frame[i+1]:
+				print('coding   ', end='\t')
+			else:
+				print('noncoding', end='\t')
+		except:
+			print('intergenic', end='\t')
+		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy.reverse_frequencies(contig_entropy[0][i]))
 		for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 			print(aminoacid_dictionary.get(aa, 0), end='\t')
 		print()

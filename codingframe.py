@@ -43,12 +43,26 @@ contig_dict = read_fasta(args.infile)
 
 actual_frame = read_gff(args.infile.replace('fna', 'gff'))
 
+for id in contig_dict:
+	right = 0
+	wrong = 0
+	contig_entropy = NucleotideEntropy(contig_dict[id])
+	for i, base in enumerate(contig_dict[id][:-2]):
+		try:
+			if actual_frame[i] ==  minimum_frame(position, contig_entropy):
+				right += 1
+			else:
+				wrong += 1
+				
+		except:
+			pass #print(i, position, "bad")
+	print(right, wrong)
+exit()
+	
 
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
 #------------------------------------finding error------------------------------------#
-	correct = 0
-	wrong = 0
 	print('ID', 'POSITION' , 'BASE' , 'AT_SKEW', 'CODING_FRAME', 'FRAME', 'TYPE', sep='\t', end='\t')
 	for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 		print(aa, end='\t')
@@ -87,20 +101,6 @@ for id in contig_dict:
 		print()
 		#print(i, base, actual_frame.get(i, "NC"), minimum_frame(position, contig_entropy))
 		#print(position, '+'+str(frame), sep='\t', end='\t')
-		#try:
-		#	if actual_frame[i] ==  minimum_frame(position, contig_entropy):
-		#		correct += 1
-		#	else:
-		#		wrong += 1
-		#	if frame == actual_frame[i]:
-		#		print('coding', end='')
-		#	else:
-		#		print('noncoding', end='')
-				
-		#except:
-		#	print('intergenic', end='')
-		#	pass #print(i, position, "bad")
-		#print()
 		#reverse
 		#print(position, '-'+str(frame), sep='\t', end='\t')
 		#aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy.reverse_frequencies(contig_entropy[0][i]))

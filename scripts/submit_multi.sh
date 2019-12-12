@@ -12,4 +12,4 @@ SEED=$(awk "NR==$SGE_TASK_ID" $SEEDFILE)
 #$ -e sge/err-$JOB_ID-$TASK_ID
 
 
-python3 codingframe.py $SEED
+python3 codingframe.py $SEED > genomes/aa/$SEED

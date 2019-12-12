@@ -43,27 +43,11 @@ contig_dict = read_fasta(args.infile)
 
 actual_frame = read_gff(args.infile.replace('fna', 'gff'))
 
-for id in contig_dict:
-	right = 0
-	wrong = 0
-	contig_entropy = NucleotideEntropy(contig_dict[id])
-	for i, base in enumerate(contig_dict[id][:-2]):
-		try:
-			if actual_frame[i] ==  minimum_frame(position, contig_entropy):
-				right += 1
-			else:
-				wrong += 1
-				
-		except:
-			pass #print(i, position, "bad")
-	print(right, wrong)
-exit()
-	
 
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
 #------------------------------------finding error------------------------------------#
-	print('ID', 'POSITION' , 'BASE' , 'AT_SKEW', 'CODING_FRAME', 'FRAME', 'TYPE', sep='\t', end='\t')
+	print('FILENAME', 'AT_SKEW', 'TYPE', sep='\t', end='\t')
 	for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 		print(aa, end='\t')
 	print()
@@ -72,13 +56,12 @@ for id in contig_dict:
 		atskew = round((dna.count('A') + dna.count('T')) / len(dna), 2)
 		#position = (i-1)//3
 		frame = (i % 3 ) + 1
-		print(os.path.basename(args.infile), i+1, base, atskew, actual_frame.get(i+1, "NC"), sep='\t', end='\t')
-		print(frame, sep='\t', end='\t')
+		print(os.path.basename(args.infile), atskew, sep='\t', end='\t')
 		try:
 			if frame == actual_frame[i+1]:
-				print('coding   ', end='\t')
+				print('c', end='\t')
 			else:
-				print('noncoding', end='\t')
+				print('n', end='\t')
 		except:
 			print('intergenic', end='\t')
 		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
@@ -86,15 +69,14 @@ for id in contig_dict:
 			print(aminoacid_dictionary.get(aa, 0), end='\t')
 		print()
 		frame = -frame
-		print(os.path.basename(args.infile), i+1, base, atskew, actual_frame.get(i+1, "NC"), sep='\t', end='\t')
-		print(frame, sep='\t', end='\t')
+		print(os.path.basename(args.infile), atskew, sep='\t', end='\t')
 		try:
 			if frame == actual_frame[i+1]:
-				print('coding   ', end='\t')
+				print('c', end='\t')
 			else:
-				print('noncoding', end='\t')
+				print('n', end='\t')
 		except:
-			print('intergenic', end='\t')
+			print('i', end='\t')
 		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy.reverse_frequencies(contig_entropy[0][i]))
 		for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 			print(aminoacid_dictionary.get(aa, 0), end='\t')

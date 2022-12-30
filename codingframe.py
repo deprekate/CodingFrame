@@ -28,6 +28,7 @@ def minimum_frame(position, contig_entropy):
 	lowest = float("inf")
 	frame = None
 	for f in [1, -1, 2, -2, 3, -3]:
+		print(contig_entropy[f][position], end='\t')
 		if contig_entropy[f][position] < lowest:
 			lowest = contig_entropy[f][position]
 			frame = f
@@ -47,23 +48,18 @@ actual_frame = read_gff(args.infile.replace('fna', 'gff'))
 for id in contig_dict:
 	contig_entropy = NucleotideEntropy(contig_dict[id])
 #------------------------------------finding error------------------------------------#
-	print('FILENAME', 'AT_SKEW', 'TYPE', sep='\t', end='\t')
-	for aa in 'ARNDBCEQZGHILKMFPSTWYV':
-		print(aa, end='\t')
-	print()
+	dna = contig_dict[id].upper()
+	atskew = round((dna.count('A') + dna.count('T')) / len(dna), 2)
 	for i, base in enumerate(contig_dict[id][:-2]):
-		dna = contig_dict[id].upper()
-		atskew = round((dna.count('A') + dna.count('T')) / len(dna), 2)
-		#position = (i-1)//3
+		position = (i-1)//3
 		frame = (i % 3 ) + 1
-		print(os.path.basename(args.infile), atskew, sep='\t', end='\t')
+		predicted_frame = minimum_frame(position, contig_entropy)
 		try:
-			if frame == actual_frame[i+1]:
-				print('c', end='\t')
-			else:
-				print('n', end='\t')
+			print(i, actual_frame[i+1], predicted_frame, sep='\t')
 		except:
-			print('intergenic', end='\t')
+			pass
+		continue
+		'''
 		aminoacid_dictionary = contig_entropy.translate_dict(contig_entropy[0][i])
 		for aa in 'ARNDBCEQZGHILKMFPSTWYV':
 			print(aminoacid_dictionary.get(aa, 0), end='\t')
@@ -103,7 +99,7 @@ for id in contig_dict:
 	atskew = (dna.count('A') + dna.count('T')) / len(dna)
 	forward_skew = (list(actual_frame.values()).count(1) + list(actual_frame.values()).count(2) + list(actual_frame.values()).count(3)) / len(actual_frame.values())
 	print("AT_SKEW:", atskew, "PERCENT_CORRECT:", correct / (correct + wrong))
-	#exit()
+	'''
 #------------------------------------plotting------------------------------------#
 	#continue
 	fig, ax = plt.subplots(2)

@@ -36,6 +36,9 @@ class CodonProbability:
 	def probability(self, codon):
 		return self.codons[codon]
 
+	def prob(self, codon, seq):
+		
+
 #my_probs = CodonProbability('ATGC')
 #print(my_probs.probability('M'))
 #print(my_probs.probability('S'))
